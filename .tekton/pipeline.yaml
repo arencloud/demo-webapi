@@ -42,6 +42,8 @@ spec:
           value: $(params.appRevision)
         - name: deleteExisting
           value: "true"
+        - name: subdirectory
+          value: app
       workspaces:
         - name: output
           workspace: shared-workspace
@@ -57,7 +59,7 @@ spec:
         steps:
           - name: go-test
             image: golang:1.25
-            workingDir: $(workspaces.source.path)
+            workingDir: $(workspaces.source.path)/app
             script: |
               #!/usr/bin/env sh
               set -euo pipefail
@@ -77,9 +79,9 @@ spec:
         - name: IMAGE
           value: $(params.imageRepo):$(params.imageTag)
         - name: DOCKERFILE
-          value: ./Dockerfile
+          value: ./app/Dockerfile
         - name: CONTEXT
-          value: .
+          value: ./app
         - name: TLSVERIFY
           value: "true"
       workspaces:
