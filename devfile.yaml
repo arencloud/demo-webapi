@@ -1,0 +1,75 @@
+schemaVersion: 2.2.2
+metadata:
+  name: demo-webapi-devspaces
+  version: 1.0.0
+  displayName: Demo WebAPI (Go)
+  description: Red Hat Dev Spaces devfile for local development, testing, and running the demo web API.
+  tags:
+    - Go
+    - API
+    - Red Hat Dev Spaces
+components:
+  - name: tools
+    container:
+      image: quay.io/devfile/universal-developer-image:ubi9-latest
+      memoryLimit: 2Gi
+      cpuLimit: 2
+      mountSources: true
+      endpoints:
+        - name: http-8080
+          targetPort: 8080
+          exposure: public
+          protocol: http
+attributes:
+  controller.devfile.io/storage-type: per-workspace
+commands:
+  - id: install
+    exec:
+      label: Install dependencies
+      component: tools
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: go mod download
+      group:
+        kind: build
+        isDefault: true
+
+  - id: test
+    exec:
+      label: Run unit tests
+      component: tools
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: go test ./...
+      group:
+        kind: test
+        isDefault: true
+
+  - id: build
+    exec:
+      label: Build binary
+      component: tools
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: mkdir -p bin && go build -o bin/webapp .
+      group:
+        kind: build
+
+  - id: run
+    exec:
+      label: Run API server
+      component: tools
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: swag init --parseDependency --parseInternal && go run .
+      hotReloadCapable: true
+      group:
+        kind: run
+        isDefault: true
+
+  - id: swagger
+    exec:
+      label: Regenerate OpenAPI docs
+      component: tools
+      workingDir: ${PROJECT_SOURCE}
+      commandLine: swag init --parseDependency --parseInternal
+
+events:
+  postStart:
+    - install
