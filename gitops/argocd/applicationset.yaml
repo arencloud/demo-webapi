@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: demo-webapi
+  namespace: openshift-gitops
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: demo-webapi-dev
+          - env: stage
+            namespace: demo-webapi-stage
+          - env: prod
+            namespace: demo-webapi-prod
+  template:
+    metadata:
+      name: demo-webapi-{{env}}
+      labels:
+        app.kubernetes.io/name: demo-webapi
+        app.kubernetes.io/environment: '{{env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/YOUR_ORG/demo-webapi-gitops.git
+        targetRevision: main
+        path: gitops/overlays/{{env}}
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

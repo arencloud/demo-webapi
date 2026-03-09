@@ -1,0 +1,45 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: demo-webapi
+  description: Go web API with Tekton CI/CD and Argo CD GitOps promotion.
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/kubernetes-id: demo-webapi
+    backstage.io/kubernetes-namespace: demo-webapi-dev
+    janus-idp.io/tekton: demo-webapi
+    argocd/app-name: demo-webapi-dev
+  tags:
+    - go
+    - webapi
+    - tekton
+    - argocd
+spec:
+  type: service
+  lifecycle: production
+  owner: group:default/platform-team
+  system: demo-platform
+  providesApis:
+    - demo-webapi-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: demo-webapi-api
+  description: OpenAPI for demo-webapi service.
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: openapi
+  lifecycle: production
+  owner: group:default/platform-team
+  definition:
+    $text: ./docs/swagger.yaml
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: demo-platform
+  description: Demo platform services managed through RHDH.
+spec:
+  owner: group:default/platform-team

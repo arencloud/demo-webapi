@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: demo-webapi-ci-cd-dev
+spec:
+  pipelineRef:
+    name: demo-webapi-ci-cd
+  params:
+    - name: appRepoUrl
+      value: https://github.com/YOUR_ORG/demo-webapi.git
+    - name: appRevision
+      value: main
+    - name: gitOpsRepoUrl
+      value: https://github.com/YOUR_ORG/demo-webapi-gitops.git
+    - name: gitOpsRevision
+      value: main
+    - name: imageRepo
+      value: quay.io/YOUR_ORG/demo-webapi
+    - name: imageTag
+      value: "0.1.0"
+    - name: targetEnvironment
+      value: dev
+  taskRunTemplate:
+    serviceAccountName: pipeline
+  workspaces:
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi
+    - name: git-auth
+      secret:
+        secretName: git-credentials

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-webapi
+  labels:
+    app.kubernetes.io/name: demo-webapi
+spec:
+  selector:
+    app.kubernetes.io/name: demo-webapi
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

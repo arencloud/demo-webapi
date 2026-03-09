@@ -1,0 +1,95 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample webapp server.",
+        "title": "WebApp API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/ping": {
+            "get": {
+                "description": "Returns a simple ping message and request headers",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "ping"
+                ],
+                "summary": "Ping endpoint",
+                "responses": {
+                    "200": {
+                        "description": "Hello I am Ping",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/realms/ext/npwl-user/logout": {
+            "get": {
+                "description": "Returns a logout message and request headers",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Advanced Logout endpoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Extranet URL",
+                        "name": "extranetUrl",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Hello I am advanced logged-out endpoint",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/realms/ext/protocol/cas/connect": {
+            "get": {
+                "description": "Returns a connect message and request headers",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Advanced Connect endpoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Extranet ID",
+                        "name": "extranetId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "p param",
+                        "name": "p",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Hello I am advanced ping",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

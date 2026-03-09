@@ -1,0 +1,62 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample webapp server.
+  title: WebApp API
+  version: "1.0"
+paths:
+  /api/ping:
+    get:
+      description: Returns a simple ping message and request headers
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Hello I am Ping
+          schema:
+            type: string
+      summary: Ping endpoint
+      tags:
+      - ping
+  /realms/ext/npwl-user/logout:
+    get:
+      description: Returns a logout message and request headers
+      parameters:
+      - description: Extranet URL
+        in: query
+        name: extranetUrl
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Hello I am advanced logged-out endpoint
+          schema:
+            type: string
+      summary: Advanced Logout endpoint
+      tags:
+      - auth
+  /realms/ext/protocol/cas/connect:
+    get:
+      description: Returns a connect message and request headers
+      parameters:
+      - description: Extranet ID
+        in: query
+        name: extranetId
+        type: string
+      - description: p param
+        in: query
+        name: p
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Hello I am advanced ping
+          schema:
+            type: string
+      summary: Advanced Connect endpoint
+      tags:
+      - auth
+swagger: "2.0"
