@@ -1,11 +1,11 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: demo-webapi-ci-cd
+  name: demo-webapi-dev
   labels:
     app.kubernetes.io/name: demo-webapi
 spec:
-  description: Build, test, push image, and promote by updating GitOps overlay tags.
+  description: Build, test, push image, and deploy to dev by updating GitOps overlay.
   params:
     - name: appRepoUrl
       type: string
@@ -15,7 +15,7 @@ spec:
       default: main
     - name: gitOpsRepoUrl
       type: string
-      description: GitOps repository URL (can be same repo for demo).
+      description: GitOps repository URL.
     - name: gitOpsRevision
       type: string
       default: main
@@ -24,11 +24,7 @@ spec:
       description: Full image repository, e.g. quay.io/org/demo-webapi.
     - name: imageTag
       type: string
-      default: latest
-    - name: targetEnvironment
-      type: string
-      default: dev
-      description: One of dev, stage, prod.
+      description: Immutable release tag, e.g. 1.2.3 or git sha.
   workspaces:
     - name: shared-workspace
     - name: git-auth
@@ -36,6 +32,7 @@ spec:
   tasks:
     - name: clone-app
       taskRef:
+        apiVersion: tekton.dev/v1beta1
         kind: ClusterTask
         name: git-clone
       params:
@@ -73,6 +70,7 @@ spec:
       runAfter:
         - unit-test
       taskRef:
+        apiVersion: tekton.dev/v1beta1
         kind: ClusterTask
         name: buildah
       params:
@@ -92,6 +90,7 @@ spec:
       runAfter:
         - build-and-push
       taskRef:
+        apiVersion: tekton.dev/v1beta1
         kind: ClusterTask
         name: git-clone
       params:
@@ -109,7 +108,7 @@ spec:
         - name: basic-auth
           workspace: git-auth
 
-    - name: promote
+    - name: deploy-dev
       runAfter:
         - clone-gitops
       taskSpec:
@@ -118,19 +117,18 @@ spec:
             type: string
           - name: imageTag
             type: string
-          - name: targetEnvironment
+          - name: gitOpsRevision
             type: string
         workspaces:
           - name: source
         steps:
-          - name: update-kustomize-image
+          - name: update-dev-overlay
             image: registry.access.redhat.com/ubi9/ubi-minimal
             workingDir: $(workspaces.source.path)/gitops-repo
             script: |
               #!/usr/bin/env bash
               set -euo pipefail
-              env="$(params.targetEnvironment)"
-              file="gitops/overlays/${env}/kustomization.yaml"
+              file="gitops/overlays/dev/kustomization.yaml"
               if [[ ! -f "${file}" ]]; then
                 echo "Missing overlay file: ${file}" >&2
                 exit 1
@@ -147,22 +145,194 @@ spec:
               set -euo pipefail
               git config user.name "tekton-bot"
               git config user.email "tekton-bot@local"
-              git add gitops/overlays/$(params.targetEnvironment)/kustomization.yaml
+              git add gitops/overlays/dev/kustomization.yaml
 
               if git diff --cached --quiet; then
-                echo "No GitOps changes to commit"
+                echo "No dev changes to commit"
                 exit 0
               fi
 
-              git commit -m "Promote demo-webapi to $(params.targetEnvironment): $(params.imageTag)"
+              git commit -m "Deploy demo-webapi to dev: $(params.imageTag)"
               git push origin HEAD:$(params.gitOpsRevision)
       params:
         - name: imageRepo
           value: $(params.imageRepo)
         - name: imageTag
           value: $(params.imageTag)
+        - name: gitOpsRevision
+          value: $(params.gitOpsRevision)
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: demo-webapi-promote
+  labels:
+    app.kubernetes.io/name: demo-webapi
+spec:
+  description: Promote an existing tested image tag from dev->stage or stage->prod.
+  params:
+    - name: gitOpsRepoUrl
+      type: string
+      description: GitOps repository URL.
+    - name: gitOpsRevision
+      type: string
+      default: main
+    - name: imageRepo
+      type: string
+      description: Full image repository, e.g. quay.io/org/demo-webapi.
+    - name: imageTag
+      type: string
+      description: Existing tested image tag to promote.
+    - name: sourceEnvironment
+      type: string
+      description: Must be dev or stage.
+    - name: targetEnvironment
+      type: string
+      description: Must be stage or prod.
+  workspaces:
+    - name: shared-workspace
+    - name: git-auth
+      optional: true
+  tasks:
+    - name: validate-flow
+      taskSpec:
+        params:
+          - name: sourceEnvironment
+            type: string
+          - name: targetEnvironment
+            type: string
+        steps:
+          - name: validate
+            image: registry.access.redhat.com/ubi9/ubi-minimal
+            script: |
+              #!/usr/bin/env bash
+              set -euo pipefail
+              src="$(params.sourceEnvironment)"
+              dst="$(params.targetEnvironment)"
+
+              if [[ "${src}" == "dev" && "${dst}" == "stage" ]]; then
+                exit 0
+              fi
+
+              if [[ "${src}" == "stage" && "${dst}" == "prod" ]]; then
+                exit 0
+              fi
+
+              echo "Invalid promotion path: ${src} -> ${dst}. Allowed: dev->stage, stage->prod" >&2
+              exit 1
+      params:
+        - name: sourceEnvironment
+          value: $(params.sourceEnvironment)
         - name: targetEnvironment
           value: $(params.targetEnvironment)
+
+    - name: clone-gitops
+      runAfter:
+        - validate-flow
+      taskRef:
+        apiVersion: tekton.dev/v1beta1
+        kind: ClusterTask
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.gitOpsRepoUrl)
+        - name: revision
+          value: $(params.gitOpsRevision)
+        - name: deleteExisting
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+        - name: basic-auth
+          workspace: git-auth
+
+    - name: promote-overlay
+      runAfter:
+        - clone-gitops
+      taskSpec:
+        params:
+          - name: imageRepo
+            type: string
+          - name: imageTag
+            type: string
+          - name: sourceEnvironment
+            type: string
+          - name: targetEnvironment
+            type: string
+          - name: gitOpsRevision
+            type: string
+        workspaces:
+          - name: source
+        steps:
+          - name: verify-source-tag
+            image: registry.access.redhat.com/ubi9/ubi-minimal
+            workingDir: $(workspaces.source.path)
+            script: |
+              #!/usr/bin/env bash
+              set -euo pipefail
+              src_file="gitops/overlays/$(params.sourceEnvironment)/kustomization.yaml"
+              if [[ ! -f "${src_file}" ]]; then
+                echo "Missing source overlay file: ${src_file}" >&2
+                exit 1
+              fi
+
+              src_tag="$(grep -E '^\s*newTag:' "${src_file}" | head -1 | awk '{print $2}')"
+              if [[ -z "${src_tag}" ]]; then
+                echo "Could not read source tag from ${src_file}" >&2
+                exit 1
+              fi
+
+              if [[ "${src_tag}" != "$(params.imageTag)" ]]; then
+                echo "Promotion blocked: source $(params.sourceEnvironment) has tag ${src_tag}, requested $(params.imageTag)" >&2
+                exit 1
+              fi
+
+          - name: update-target-overlay
+            image: registry.access.redhat.com/ubi9/ubi-minimal
+            workingDir: $(workspaces.source.path)
+            script: |
+              #!/usr/bin/env bash
+              set -euo pipefail
+              dst_file="gitops/overlays/$(params.targetEnvironment)/kustomization.yaml"
+              if [[ ! -f "${dst_file}" ]]; then
+                echo "Missing target overlay file: ${dst_file}" >&2
+                exit 1
+              fi
+
+              sed -i "s|newName: .*|newName: $(params.imageRepo)|" "${dst_file}"
+              sed -i "s|newTag: .*|newTag: $(params.imageTag)|" "${dst_file}"
+
+          - name: commit-and-push
+            image: alpine/git:2.47.2
+            workingDir: $(workspaces.source.path)
+            script: |
+              #!/usr/bin/env sh
+              set -euo pipefail
+              git config user.name "tekton-bot"
+              git config user.email "tekton-bot@local"
+              git add gitops/overlays/$(params.targetEnvironment)/kustomization.yaml
+
+              if git diff --cached --quiet; then
+                echo "No promotion changes to commit"
+                exit 0
+              fi
+
+              git commit -m "Promote demo-webapi $(params.sourceEnvironment)->$(params.targetEnvironment): $(params.imageTag)"
+              git push origin HEAD:$(params.gitOpsRevision)
+      params:
+        - name: imageRepo
+          value: $(params.imageRepo)
+        - name: imageTag
+          value: $(params.imageTag)
+        - name: sourceEnvironment
+          value: $(params.sourceEnvironment)
+        - name: targetEnvironment
+          value: $(params.targetEnvironment)
+        - name: gitOpsRevision
+          value: $(params.gitOpsRevision)
       workspaces:
         - name: source
           workspace: shared-workspace

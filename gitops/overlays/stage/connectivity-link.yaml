@@ -38,37 +38,37 @@ spec:
       backendRefs:
         - name: demo-webapi
           port: 8080
----
-apiVersion: kuadrant.io/v1
-kind: TLSPolicy
-metadata:
-  name: demo-webapi-gw-tls
-spec:
-  targetRef:
-    group: gateway.networking.k8s.io
-    kind: Gateway
-    name: demo-webapi-gw
-  issuerRef:
-    group: cert-manager.io
-    kind: ClusterIssuer
-    name: letsencrypt-prod
----
-apiVersion: kuadrant.io/v1
-kind: DNSPolicy
-metadata:
-  name: demo-webapi-gw-dns
-spec:
-  healthCheck:
-    path: /api/ping
-    interval: 1m
-    failureThreshold: 3
-  loadBalancing:
-    defaultGeo: true
-    geo: GEO-NA
-    weight: 120
-  targetRef:
-    group: gateway.networking.k8s.io
-    kind: Gateway
-    name: demo-webapi-gw
-  providerRefs:
-    - name: aws-credentials
+#---
+#apiVersion: kuadrant.io/v1
+#kind: TLSPolicy
+#metadata:
+#  name: demo-webapi-gw-tls
+#spec:
+#  targetRef:
+#    group: gateway.networking.k8s.io
+#    kind: Gateway
+#    name: demo-webapi-gw
+#  issuerRef:
+#    group: cert-manager.io
+#    kind: ClusterIssuer
+#    name: letsencrypt-prod
+#---
+#apiVersion: kuadrant.io/v1
+#kind: DNSPolicy
+#metadata:
+#  name: demo-webapi-gw-dns
+#spec:
+#  healthCheck:
+#    path: /api/ping
+#    interval: 1m
+#    failureThreshold: 3
+#  loadBalancing:
+#    defaultGeo: true
+#    geo: GEO-NA
+#    weight: 120
+#  targetRef:
+#    group: gateway.networking.k8s.io
+#    kind: Gateway
+#    name: demo-webapi-gw
+#  providerRefs:
+#    - name: aws-credentials

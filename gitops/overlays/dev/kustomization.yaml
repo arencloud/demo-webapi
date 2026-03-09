@@ -9,5 +9,5 @@ commonLabels:
   app.kubernetes.io/environment: dev
 images:
   - name: demo-webapi
-    newName: quay.io/YOUR_ORG/demo-webapi
+    newName: quay.io/rh-ee-egevorky/demo-webapi
     newTag: 0.1.0

@@ -1,6 +1,6 @@
 site_name: Demo WebAPI
 site_description: Documentation for demo-webapi service and API.
-repo_url: https://github.com/YOUR_ORG/demo-webapi
+repo_url: https://github.com/arencloud/demo-webapi
 nav:
   - Overview: docs/index.md
   - API: docs/api.md

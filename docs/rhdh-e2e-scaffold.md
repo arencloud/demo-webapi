@@ -4,7 +4,9 @@ This repo now includes a baseline RHDH 1.9 delivery flow:
 
 - `catalog-info.yaml`: Backstage entities for service + API.
 - `mkdocs.yml` + `docs/*.md`: TechDocs pages rendered in RHDH.
-- `.tekton/pipeline.yaml`: CI/CD pipeline for build, test, image push, and environment promotion.
+- `.tekton/pipeline.yaml`: two pipelines:
+  - `demo-webapi-dev`: build, test, push, deploy to `dev`
+  - `demo-webapi-promote`: controlled promotion `dev->stage` and `stage->prod`
 - `gitops/overlays/*`: Kustomize overlays for `dev`, `stage`, `prod`.
 - `gitops/argocd/applicationset.yaml`: Argo CD ApplicationSet for all environments.
 - `gitops/overlays/*/connectivity-link.yaml`: Red Hat Connectivity Link exposure for each environment.
@@ -22,7 +24,7 @@ This repo now includes a baseline RHDH 1.9 delivery flow:
 
 ## Configure placeholders
 
-Replace all `YOUR_ORG` values in:
+Adjust repository/image placeholders in:
 
 - `.tekton/pipelinerun-dev.yaml`
 - `gitops/base/kustomization.yaml`
@@ -51,10 +53,19 @@ oc apply -f .tekton/pipeline.yaml
 oc apply -f .tekton/pipelinerun-dev.yaml
 ```
 
-For stage/prod promotion, rerun with:
+For stage promotion, apply:
 
-- `targetEnvironment=stage` or `prod`
-- `imageTag=<existing-tested-tag>`
+```bash
+oc apply -f .tekton/pipelinerun-stage.yaml
+```
+
+For prod promotion, apply:
+
+```bash
+oc apply -f .tekton/pipelinerun-prod.yaml
+```
+
+Use the same immutable `imageTag` through dev, stage, and prod.
 
 ## Enable Argo CD deployment
 

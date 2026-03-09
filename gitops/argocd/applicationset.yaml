@@ -22,7 +22,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/YOUR_ORG/demo-webapi-gitops.git
+        repoURL: https://github.com/arencloud/demo-webapi-gitops.git
         targetRevision: main
         path: gitops/overlays/{{env}}
       destination:

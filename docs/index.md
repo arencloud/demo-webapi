@@ -6,7 +6,7 @@
 
 - Language: Go
 - Default port: `8080`
-- Container image: `quay.io/YOUR_ORG/demo-webapi`
+- Container image: `quay.io/rh-ee-egevorky/demo-webapi`
 
 ## Endpoints
 

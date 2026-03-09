@@ -1,15 +1,11 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  generateName: demo-webapi-dev-
+  generateName: demo-webapi-prod-promote-
 spec:
   pipelineRef:
-    name: demo-webapi-dev
+    name: demo-webapi-promote
   params:
-    - name: appRepoUrl
-      value: https://github.com/arencloud/demo-webapi.git
-    - name: appRevision
-      value: main
     - name: gitOpsRepoUrl
       value: https://github.com/arencloud/demo-webapi-gitops.git
     - name: gitOpsRevision
@@ -18,6 +14,10 @@ spec:
       value: quay.io/rh-ee-egevorky/demo-webapi
     - name: imageTag
       value: "0.1.0"
+    - name: sourceEnvironment
+      value: stage
+    - name: targetEnvironment
+      value: prod
   taskRunTemplate:
     serviceAccountName: pipeline
   workspaces:
@@ -28,7 +28,7 @@ spec:
             - ReadWriteOnce
           resources:
             requests:
-              storage: 2Gi
+              storage: 1Gi
     - name: git-auth
       secret:
         secretName: git-credentials

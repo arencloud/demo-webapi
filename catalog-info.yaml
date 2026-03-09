@@ -43,3 +43,12 @@ metadata:
   description: Demo platform services managed through RHDH.
 spec:
   owner: group:default/platform-team
+---
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: demo-webapi-templates
+  description: Software templates published by this repository.
+spec:
+  targets:
+    - ./templates/go-application/template.yaml
