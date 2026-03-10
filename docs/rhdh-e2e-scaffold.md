@@ -13,7 +13,7 @@ This repo now includes a baseline RHDH 1.9 delivery flow:
 
 ## Prerequisites
 
-1. OpenShift Pipelines installed (Tekton), including `git-clone` and `buildah` ClusterTasks.
+1. OpenShift Pipelines installed (Tekton), with namespace `Task` definitions for `git-clone` and `buildah`.
 2. OpenShift GitOps (Argo CD) installed.
 3. Red Hat Connectivity Link Operator installed (Gateway API + Kuadrant CRDs available).
 4. A valid `GatewayClass` available (default scaffold uses `istio`).
@@ -49,20 +49,22 @@ Specifically check:
 Apply the pipeline and run example:
 
 ```bash
+oc apply -n builder -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.9/git-clone.yaml
+oc apply -n builder -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/buildah/0.9/buildah.yaml
 oc apply -f .tekton/pipeline.yaml
-oc apply -f .tekton/pipelinerun-dev.yaml
+oc create -f .tekton/pipelinerun-dev.yaml
 ```
 
 For stage promotion, apply:
 
 ```bash
-oc apply -f .tekton/pipelinerun-stage.yaml
+oc create -f .tekton/pipelinerun-stage.yaml
 ```
 
 For prod promotion, apply:
 
 ```bash
-oc apply -f .tekton/pipelinerun-prod.yaml
+oc create -f .tekton/pipelinerun-prod.yaml
 ```
 
 Use the same immutable `imageTag` through dev, stage, and prod.

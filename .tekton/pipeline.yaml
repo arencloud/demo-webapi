@@ -32,8 +32,7 @@ spec:
   tasks:
     - name: clone-app
       taskRef:
-        apiVersion: tekton.dev/v1beta1
-        kind: ClusterTask
+        kind: Task
         name: git-clone
       params:
         - name: url
@@ -72,8 +71,7 @@ spec:
       runAfter:
         - unit-test
       taskRef:
-        apiVersion: tekton.dev/v1beta1
-        kind: ClusterTask
+        kind: Task
         name: buildah
       params:
         - name: IMAGE
@@ -92,8 +90,7 @@ spec:
       runAfter:
         - build-and-push
       taskRef:
-        apiVersion: tekton.dev/v1beta1
-        kind: ClusterTask
+        kind: Task
         name: git-clone
       params:
         - name: url
@@ -235,8 +232,7 @@ spec:
       runAfter:
         - validate-flow
       taskRef:
-        apiVersion: tekton.dev/v1beta1
-        kind: ClusterTask
+        kind: Task
         name: git-clone
       params:
         - name: url
